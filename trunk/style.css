@@ -1,0 +1,102 @@
+
+
+#searchbox {
+  position:absolute;
+  top:5px;
+  left:5px;
+  height:30px;
+  right:5px;
+  padding:10px 0 0 10px;
+  background-color:#bbddff;
+}
+
+#loading {
+  display:block;
+  float:right;
+  margin-top:-18px;
+  margin-left:10px;
+}
+
+#results {
+  position:absolute;
+  top:50px;
+  bottom:5px;
+  left:5px;
+  right:5px;
+  background-color:#bbddff;
+}
+
+#results .work {
+  text-align:center;
+}
+
+#results .book {
+  background-image:url(round-back.png);
+  background-repeat:repeat-x;
+  background-color:lightblue;
+  min-height:30px;
+  position:relative;
+}
+
+#results .book .title {
+  position:absolute;
+  top:0;
+  font-size:10px;
+  background-color:#bef;
+  left:2px;
+}
+
+#results .book .chapter {
+  background-image:url(round-back.png);
+  background-repeat:repeat-x;
+  background-color:#bbddff;
+  float:left;
+  border-left:1px solid;
+  margin-left:-1px;
+  padding:15px 0 0;
+  font-size:6px;
+  height:15px;
+  text-align:center;
+  cursor:pointer;
+}
+
+#hovertext {
+  position:fixed;
+  top:0px;
+  left:0px;
+  display:none;
+  background-color:white;
+  border:1px solid #ccc;
+  font-size:10px;
+  padding:2px 4px;
+}
+
+
+/** iframe stuff **/
+
+#back {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  opacity:.7;
+  background-color:black;
+  display:none;
+}
+
+#singleshow {
+  position:fixed;
+  left:50%;
+  top:50%;
+  width:50%;
+  height:500px;
+  margin-left:-25%;
+  margin-top:-250px;
+  background-color:white;
+  border:1px solid black;
+  display:none;
+}
+
+
+
