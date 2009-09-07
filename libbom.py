@@ -44,8 +44,8 @@ class StdWks:
   def __len__(self):
     return len(self.works)
   
-  def search(self,term):
-    return arraysum(((work.short,)+res for res in work.search(term)) for work in self)
+  def search(self,term,whole=False):
+    return arraysum(((work.short,)+res for res in work.search(term,whole=whole)) for work in self)
 
 class Work:
   _caches = {}
@@ -96,8 +96,8 @@ class Work:
       self._cache[short] = Book(self,short,self.bdict[short])
     return self._cache[short]
   
-  def search(self,term):
-    return arraysum(([book.short]+list(res) for res in book.search(term)) for book in self)
+  def search(self,term,whole=False):
+    return arraysum(([book.short]+list(res) for res in book.search(term,whole=whole)) for book in self)
   
   def loadall(self):
     list(self.book(name) for name in self.books)
@@ -135,8 +135,8 @@ class Book:
       self._cache[chap] = Chapter(self,chap)
     return self._cache[chap]
   
-  def search(self,term):
-    return arraysum(((chap.num,v) for v in chap.search(term)) for chap in self)
+  def search(self,term,whole=False):
+    return arraysum(((chap.num,v) for v in chap.search(term,whole=whole)) for chap in self)
 
 class Chapter:
   rx = {'summery':re.compile('<div class="summary">(.+?)</div>',re.S),
@@ -171,20 +171,28 @@ class Chapter:
   def __len__(self):
     return len(self.verses)
 
-  def search(self,term, rx=False, justverse=True):
+  def search(self,term, whole=False,rx=False, justverse=True):
     if rx:
-      rx = re.compile(rx)
-      f = lambda a:rx.match(a)
+      rx = re.compile(term)
+      wrx = re.compile('\W'+term+'\W')
+      f = lambda a:rx.search(a)
+      wf = lambda a:wrx.search(a)
     else:
       term = term.lower()
+      rx = re.compile('\W'+re.escape(term)+'\W')
       f = lambda a:a.lower().find(term)!=-1
+      wf = lambda a:rx.search(a)
     if not justverse:
       if f(self.summery):
         yield (0)
     for i,v in enumerate(self.verses):
       if f(clean(v)):
-        yield (i)
+        if whole:
+          if wf(clean(v)):
+            yield (i)
+        else:
+          yield (i)
 
 def clean(x):
-  return re.sub('<[^>]+>','',re.sub(re.escape('<sup>') + '\w' + re.escape('</sup>'),'',x))
+  return re.sub('<[^>]+>','',re.sub(re.escape('<sup>') + '\w' + re.escape('</sup>'),'',x)).replace(',','')
     

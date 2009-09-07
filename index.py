@@ -33,7 +33,10 @@ def search():
     std = std[form['book'].value]
     if form.has_key('chap'):
       std = std[form['chap'].value]
-  print std.search(form['term'].value)
+  if form.has_key('whole_word') and form['whole_word'].value=='true':
+    print std.search(form['term'].value,whole=True)
+  else:
+    print std.search(form['term'].value)
 
 def show_chapter():
   std = libbom.StdWks()
@@ -71,6 +74,7 @@ def show_chapter():
 <div id="contents">
 '''
   rgx = re.compile(fixrgx(form['term'].value),re.I)
+  #print '<pre>',fixrgx(form['term'].value),'</pre>'
   for v in res:
     print rgx.sub(highlight,chap[v].encode('utf8')).replace(" onclick='return toggleMarked(event, this)'",'')
     #print chap[v].encode('utf8').replace(form['term'].value, '<span class="highlight">' + form['term'].value + '</span>')
@@ -81,7 +85,10 @@ def show_chapter():
 '''
 
 def fixrgx(t):
-  return re.sub('(\w+)',lambda a:'(?:<sup>\w</sup>)?(?:<[^>]+>)*'+a.group()+'(?:<[^>]+>)*',t)
+  fixed = re.sub('(\w+)',lambda a:'(?:<sup>\w</sup>)?(?:<[^>]+>)*'+a.group()+'(?:<[^>]+>)*',t).replace(' ','[\s\W,]+')
+  if form.has_key('whole_word'):
+    fixed = '\W'+fixed+'\W'
+  return fixed
 
 def highlight(a):
   return '<span class="highlight">'+a.group()+'</span>'

@@ -61,7 +61,7 @@ var SearchTheScriptures = Class([],{
     $('#singleshow').attr('src','').attr('src','index.py?cmd=show_chapter&book='+book+'&chap='+chap+'&term='+$('#search').val()).show();
   },
   search:function(self){
-    self._send({data:{'cmd':'search','term':$('#search').val(),'work':$('#works').val()},func:self._search})
+    self._send({data:{'cmd':'search','term':$('#search').val(),'work':$('#works').val(),'whole_word':$('#whole-word')[0].checked},func:self._search})
   },
   _search:function(self,data){
     eval('var results = '+data);
