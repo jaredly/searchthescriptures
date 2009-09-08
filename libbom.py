@@ -175,12 +175,12 @@ class Chapter:
     if rx:
       rx = re.compile(term)
       wrx = re.compile('\W'+term+'\W')
-      f = lambda a:rx.search(a)
+      f = lambda a:rx.search(a) and notintag(a[:rx.search(a).start()])
       wf = lambda a:wrx.search(a)
     else:
       term = term.lower()
       rx = re.compile('\W'+re.escape(term)+'\W')
-      f = lambda a:a.lower().find(term)!=-1
+      f = lambda a:a.lower().find(term)!=-1 and notintag(a[:a.lower().find(term)])
       wf = lambda a:rx.search(a)
     if not justverse:
       if f(self.summery):
@@ -195,4 +195,7 @@ class Chapter:
 
 def clean(x):
   return re.sub('<[^>]+>','',re.sub(re.escape('<sup>') + '\w' + re.escape('</sup>'),'',x)).replace(',','')
-    
+
+def notintag(x):
+  return x.count('<')==x.count('>')
+
