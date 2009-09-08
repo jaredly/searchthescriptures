@@ -2,66 +2,141 @@
 var SearchTheScriptures = Class([],{
   books:{},
   bookdata:{},
+  whole:false,
+  term:'',
   __init__:function(self){
     $(self.load);
   },
   load:function(self){
-    self._send({data:{'cmd':'load_books'},func:self.load_books});
+    self._send({data:{'cmd':'load_booklist'},func:self.load_books});
     $('#searchbox button').click(self.search).mousemove(function(e){
       $(this).css('top',parseInt(e.clientY)+10+'px').css('left',parseInt(e.clientX)+10+'px');
     });
     $('#works').change(function(){
-      self.load_work(this.value);
+      self.reload_booklist();
     });
     $('#back').click(function(){
       $(this).hide();
-      $('#singleshow').hide();//.attr('src','');
+      $('#singleshow').hide();
     });
   },
   load_books:function(self,data){
-    eval('var response='+data);
-    console.log(response.length);
-    for (var i=0;i<response.length;i++){
-      if (!response[i][1].length)continue;
-      $('<option>'+response[i][0]+'</option>').appendTo('#works');
-      self.books[response[i][0]] = response[i][1];
-    }
-    self.load_work($('#works').val());
+    $('#booklist').html(data);
+    $('.work').each(function(){
+      $('<option value="'+this.id.split('-')[1]+'">'+$('>.title',this).html()+'</option>').appendTo('#works');
+    });
+    $('.book').each(function(){
+      self.bookdata[this.id.split('-')[1]] = $('>.title',this).html();
+    });
+    self.reload_booklist();
   },
-  load_work:function(self,work){
-    var totalsize = 0;
-    $('#loading').show();
-    $('#results').html('');
-    for (var a=0;a<self.books[work].length;a++){
-      totalsize += parseInt(self.books[work][a][1][1]);
-    }
-    console.log(totalsize);
-    for (var a=0;a<self.books[work].length;a++){
-      var book = self.books[work][a];
-      self.bookdata[book[0]] = book[1];
-      var bdiv = $('<div class="book" id="'+book[0]+'"><div class="title">'+book[1][0]+'</div></div>').appendTo('#results');
-      
-      for (var i=0;i<book[1][2];i++){
-        var over = function(e){
-          var off = $(this).offset();
-          $('#hovertext').show().html($.data(this,'num')+' results').css('top',parseInt(e.clientY)+10+'px').css('left',parseInt(e.clientX)+10+'px');
-        };
-        var chap = $('<div class="chapter '+i+'">'+(i+1)+'</div>').appendTo(bdiv).css('width',(100/book[1][2])+'%').mouseout(function(){
-          $('#hovertext').hide();
-        }).mousemove(over).click(function(){
-          self.show_chap($(this).parent().attr('id'),this.innerHTML);
-        });
-        $.data(chap[0],'num',0);
-      }
-    }
-    $('#loading').hide();
+  reload_booklist:function(self){
+    var work = $('#works').val();
+    $('.work').not('#work-'+work).css('position','absolute').animate({'left':'110%'},800);
+    $('#work-'+work).css('position','absolute').css('left','-100%').show().animate({'left':'0'},800);
+    $('.chapter').mouseout(function(){
+      $('#hovertext').hide();
+    }).mousemove(function(e){
+      $('#hovertext').html($.data(this,'num')+' results found').show().css('top',e.clientY+10+'px').css('left',e.clientX+10+'px');
+    }).click(function(){
+      self.show_chap(self.bookdata[$(this).parent().attr('id').split('-')[1]]+' '+this.innerHTML);
+    });
   },
-  show_chap:function(self,book,chap){
+  
+  show_chap:function(self,reference){
     $('#back').show();
-    $('#singleshow').attr('src','').attr('src','index.py?cmd=show_chapter&book='+book+'&chap='+chap+'&term='+$('#search').val()).show();
+    if (!nonav)
+      $('#singleshow .breadcrumb').html('');
+    self._send({data:{'cmd':'show_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(book,chap,nonav,verse)});
   },
+  
+  show_whole_chap:function(self,reference){
+    $('#back').show();
+    self._send({data:{'cmd':'show_whole_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(book,chap,!yesnav,verse)});
+  },
+  
+  showIframe:function(self, book, chap, nonav,verse){
+    function jumpto(verse){
+      document.location = '#' + verse;
+      $('#verse-'+verse).css('background-color','#ff7');
+    }
+    return function(data){
+      $('#singleshow').show().find('.results').html(data).find('.verse a').each(function(){
+        $.data(this, 'footnote', $(this).attr('title').replace(/;/g,'<br/>'));
+        $(this).attr('title','').attr('href','javascript:void(0)');
+      }).mousemove(function(e){
+        $('#hovertext').not('.fixed').show().html($.data(this,'footnote')).css('top',parseInt(e.clientY)+10+'px').css('left',parseInt(e.clientX)+10+'px');
+      }).mouseout(function(){
+        $('#hovertext').not('.fixed').hide();
+      }).click(function(e){
+        /** show fixed footnote **/
+        var options = $.data(this,'footnote').split('<br/>');
+        if (options.length==1){
+          self.gotoFootnote(options[0]);
+        }else{
+          $('#hovertext').addClass('fixed').css('top',parseInt(e.clientY)+10+'px').css('left',parseInt(e.clientX)+10+'px').show().html('').mousedown(function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          });
+          for (var i=0;i<options.length;i++){
+            $('<div>'+options[i]+'</div>').appendTo('#hovertext').click(function(){
+              self.gotoFootnote(this.innerHTML);
+            });
+          }
+          function out(){
+            $('#hovertext').hide().removeClass('fixed');
+            $(document).unbind('mousedown',out);
+          }
+          $(document).bind('mousedown',out);
+        }
+      });
+      $('#singleshow .show-all').click(function(){
+        self.show_whole_chap(book,chap);
+      });
+      $('#singleshow .collapse').click(function(){
+        self.show_chap(book,chap,true);
+      });
+      $('#singleshow .jump a.result').click(function(){
+        jumpto(this.innerHTML);
+      });
+      if (!nonav && !$('#singleshow .breadcrumb .'+book+'/'+chap).length){
+        $('<div class="'+book+'/'+chap+'">'+self.bookdata[book]+' '+chap+'</div>').appendTo('#singleshow .breadcrumb').click(function(){
+          //self.show_whole_chap(self.
+        });
+      }else{
+        $('#singleshow .breadcrumb div').removeClass('selected');
+        $('#singleshow .breadcrumb .'+book+'/'+chap).addClass('selected');
+      }
+      $('#singleshow .results .jump').appendTo('#singleshow .breadcrumb');
+      //debugger;
+      if (verse){
+        jumpto(verse);
+      }
+    };
+  },
+  
+  gotoFootnote:function(self,note){
+    note = note.replace(/^\s+/g,'').replace(/\s+$/g,'');
+    if (note.indexOf('TG')==0){
+    
+    }else if (note.indexOf('BD')==0){
+    
+    }else if (note.indexOf('HEB')==0){
+    
+    }else{ // assume its a reference
+      var parts = note.replace(': ',':').split(' ');
+      bk = parts[0].toLowerCase().replace(/\.$/g,'');
+      //debugger;
+      var cv = parts[1].replace(/\.$/g,'').split(':');
+      self.show_whole_chap(bk,cv[0],true,cv[1]);
+    }
+  },
+  
   search:function(self){
     self._send({data:{'cmd':'search','term':$('#search').val(),'work':$('#works').val(),'whole_word':$('#whole-word')[0].checked},func:self._search})
+    self.term = $('#search').val();
+    self.whole =$('#whole-word')[0].checked;
   },
   _search:function(self,data){
     eval('var results = '+data);
@@ -75,7 +150,7 @@ var SearchTheScriptures = Class([],{
       }
       books[results[i][0]] += 1;
       
-      var chap = $('#'+results[i][0]+' .'+results[i][1]);
+      var chap = $('#book-'+results[i][0]+' .ch'+results[i][1]);
       $.data(chap[0],'num',1+$.data(chap[0],'num'));
       var chrs = '0123456789abc';
       var num = $.data(chap[0],'num');

@@ -11,26 +11,40 @@
 }
 
 #loading {
-  display:block;
-  float:right;
-  margin-top:-18px;
-  margin-left:10px;
+  display:none;
+  width:66px;
+  height:66px;
+  top:50%;
+  left:50%;
+  margin-left:-33px;
+  margin-top:-33px;
+  background-image:url(loading.gif);
+  position:absolute;
+  -moz-border-radius:33px;
 }
 
-#results {
+#booklist {
   position:absolute;
   top:50px;
   bottom:5px;
   left:5px;
   right:5px;
   background-color:#bbddff;
+  overflow:hidden;
 }
 
-#results .work {
+#booklist .work {
   text-align:center;
+  display:none;
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  overflow:auto;
+  width:100%;
 }
 
-#results .book {
+#booklist .book {
   background-image:url(round-back.png);
   background-repeat:repeat-x;
   background-color:lightblue;
@@ -38,7 +52,7 @@
   position:relative;
 }
 
-#results .book .title {
+#booklist .book .title {
   position:absolute;
   top:0;
   font-size:10px;
@@ -46,7 +60,7 @@
   left:2px;
 }
 
-#results .book .chapter {
+#booklist .book .chapter {
   background-image:url(round-back.png);
   background-repeat:repeat-x;
   background-color:#bbddff;
@@ -60,6 +74,11 @@
   cursor:pointer;
 }
 
+#booklist .book .chapter.ch0{
+  border-left:none;
+  margin-left:0;
+}
+
 #hovertext {
   position:fixed;
   top:0px;
@@ -69,6 +88,12 @@
   border:1px solid #ccc;
   font-size:10px;
   padding:2px 4px;
+}
+
+#hovertext div {
+  text-decoration:underline;
+  color:blue;
+  cursor:pointer;
 }
 
 
@@ -87,6 +112,7 @@
 
 #singleshow {
   position:fixed;
+  overflow:auto;
   left:50%;
   top:50%;
   width:50%;
@@ -98,5 +124,56 @@
   display:none;
 }
 
+#singleshow .highlight {
+  background-color:#ff9;
+}
 
+#singleshow .results {
+  padding:0 30px;
+  position:absolute;
+  overflow:auto;
+  top:40px;
+  bottom:0;
+  left:0;
+  right:0;
+}
 
+#singleshow .results div {
+  padding-top:5px;
+} 
+#singleshow #contents div:hover {
+  background-image:url(expand.png);
+  background-repeat:no-repeat;
+  background-position:5px 0;
+}
+#singleshow .results sup {
+  position:absolute;
+  margin-top:-5px;
+}
+#singleshow .results a {
+  margin-left:8px;
+}
+
+#singleshow .results .jump {
+  position:fixed;
+  background-color:white;
+  margin-top:-20px;
+  width:450px;
+}
+
+#singleshow .breadcrumb {
+  height:50px;
+}
+
+#singleshow .breadcrumb div {
+  margin:5px;
+  padding:5px;
+  background-color:#ccc;
+  -moz-border-radius:12px;
+  cursor:pointer;
+  float:left;
+}
+
+#singleshow .breadcrumb div.selected {
+  background-color:#eee;
+}
