@@ -10,22 +10,13 @@ function new_class(){
             return cls[func].apply(self,args);
         }
     }
-    var extends = to_array(arguments);
+    var _extends = to_array(arguments);
     
     var cls = function(){
         var self = {};self.__init__ = function(){};
         self._class = cls;
         var args = to_array(arguments);
         
-        /**for each(ext in extends){
-            for (attr in ext){
-                if (typeof(ext[attr])!="function"){
-                    self[attr] = ext[attr];
-                }else{
-                    meta(ext,self,attr);
-                }
-            }
-        }**/
         for (attr in cls){
             if (typeof(cls[attr])!="function"){
                 self[attr] = cls[attr];
@@ -37,7 +28,8 @@ function new_class(){
         return self;
     }
     
-    for each(ext in extends){
+    for (var i=0;i<_extends.length;i++){
+        ext = _extends[i];
         for (attr in ext){
             if (attr=='prototype')continue;
             cls[attr] = ext[attr];
