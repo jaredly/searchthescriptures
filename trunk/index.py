@@ -3,7 +3,6 @@
 import os,sys,re
 import cgi
 import base64
-import json
 import random
 
 sys.stderr = sys.stdout
