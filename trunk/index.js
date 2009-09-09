@@ -23,6 +23,11 @@ var SearchTheScriptures = Class([],{
       $(this).hide();
       $('#singleshow').hide();
     });
+    $('#search').keydown(function(e){
+      if (e.keyCode==13){
+        self.search();
+      }
+    });
   },
   load_books:function(self,data){
     $('#booklist').html(data);
