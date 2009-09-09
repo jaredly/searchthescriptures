@@ -93,7 +93,9 @@ var SearchTheScriptures = Class([],{
             return false;
           });
           for (var i=0;i<options.length;i++){
-            $('<div>'+options[i]+'</div>').appendTo('#hovertext').click(function(){
+            var cls='';
+            if (self.validateFootnote(options[i]))cls = 'clickable';
+            $('<div class="'+cls+'">'+options[i]+'</div>').appendTo('#hovertext').click(function(){
               self.gotoFootnote(this.innerHTML);
             });
           }
@@ -143,6 +145,16 @@ var SearchTheScriptures = Class([],{
         jumpto(verse);
       }
     };
+  },
+  
+  validateFootnote:function(self,note){
+    note = note.replace(/^\s+/g,'').replace(/\s+$/g,'');
+      for (var name in self.bookdata){
+        if (note.indexOf(titleize(name))==0 || note.indexOf(self.bookdata[name])==0){
+          return true;
+        }
+      }
+      return false;
   },
   
   gotoFootnote:function(self,note){
