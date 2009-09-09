@@ -74,6 +74,14 @@
   cursor:pointer;
 }
 
+#booklist .book .chapter:hover {
+  background-color:#def!important;
+}
+
+#booklist .book .chapter.results:hover {
+  background-color:#fed!important;
+}
+
 #booklist .book .chapter.ch0{
   border-left:none;
   margin-left:0;
@@ -112,7 +120,8 @@
 
 #singleshow {
   position:fixed;
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
   left:50%;
   top:50%;
   width:50%;
@@ -125,14 +134,30 @@
 }
 
 #singleshow .highlight {
-  background-color:#ff9;
+  background-color:#ff8;
+}
+
+#singleshow .jumprow {
+  position:absolute;
+  top:40px;
+  height:20px;
+  left:0;
+  right:0;
+  font-variant:small-caps;
+  font-size:.8em;
+  padding-left:10px;
+}
+
+#singleshow .jumprow .expand, #singleshow .jumprow .collapse {
+  color:blue;
+  cursor:pointer;
 }
 
 #singleshow .results {
   padding:0 30px;
   position:absolute;
   overflow:auto;
-  top:40px;
+  top:60px;
   bottom:0;
   left:0;
   right:0;
@@ -140,7 +165,10 @@
 
 #singleshow .results div {
   padding-top:5px;
-} 
+}
+#singleshow .results .crumb {
+  display:none;
+}
 #singleshow #contents div:hover {
   background-image:url(expand.png);
   background-repeat:no-repeat;
@@ -163,17 +191,41 @@
 
 #singleshow .breadcrumb {
   height:50px;
+  width:2000px;
 }
 
-#singleshow .breadcrumb div {
+#singleshow .breadcrumb .crumb {
   margin:5px;
   padding:5px;
   background-color:#ccc;
+  border:1px solid white;
   -moz-border-radius:12px;
   cursor:pointer;
   float:left;
+  position:relative;
 }
 
-#singleshow .breadcrumb div.selected {
+#singleshow .breadcrumb .crumb .delete {
+  background-image:url(close.png);
+  background-position:0 0;
+  position:absolute;
+  right:-2px;
+  top:-2px;
+  width:16px;
+  height:16px;
+  cursor:pointer;
+  display:none;
+}
+
+#singleshow .breadcrumb .crumb:hover .delete {
+  display:block;
+}
+
+#singleshow .breadcrumb .crumb .delete:hover {
+  background-position:32px 0;
+}
+
+#singleshow .breadcrumb .crumb.selected {
   background-color:#eee;
+  border-color:black;
 }

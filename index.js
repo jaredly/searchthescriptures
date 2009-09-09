@@ -1,4 +1,8 @@
 
+function titleize(x){
+  return x.replace(/_/g,' ').replace(/(^| )\w/g,function(x){return x.toUpperCase();})+'.';
+}
+
 var SearchTheScriptures = Class([],{
   books:{},
   bookdata:{},
@@ -37,30 +41,39 @@ var SearchTheScriptures = Class([],{
     $('.chapter').mouseout(function(){
       $('#hovertext').hide();
     }).mousemove(function(e){
+      if (!$.data(this,'num'))return;
       $('#hovertext').html($.data(this,'num')+' results found').show().css('top',e.clientY+10+'px').css('left',e.clientX+10+'px');
     }).click(function(){
-      self.show_chap(self.bookdata[$(this).parent().attr('id').split('-')[1]]+' '+this.innerHTML);
+      self.clearIframe();
+      self.show_chap(titleize($(this).parent().attr('id').split('-')[1])+' '+this.innerHTML);
     });
+  },
+  
+  clearIframe:function(self){
+    $('#singleshow .breadcrumb').html('');
+    $('#singleshow .results').html('');
+    
   },
   
   show_chap:function(self,reference){
     $('#back').show();
-    if (!nonav)
-      $('#singleshow .breadcrumb').html('');
-    self._send({data:{'cmd':'show_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(book,chap,nonav,verse)});
+    //if (!nonav)
+    //  $('#singleshow .breadcrumb').html('');
+    self._send({data:{'cmd':'show_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(reference)});
   },
   
   show_whole_chap:function(self,reference){
     $('#back').show();
-    self._send({data:{'cmd':'show_whole_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(book,chap,!yesnav,verse)});
+    self._send({data:{'cmd':'show_whole_chapter','ref':reference,'term':self.term,'whole_word':self.whole},func:self.showIframe(reference)});
   },
   
-  showIframe:function(self, book, chap, nonav,verse){
+  showIframe:function(self, reference, verse){
     function jumpto(verse){
       document.location = '#' + verse;
-      $('#verse-'+verse).css('background-color','#ff7');
+      $('#verse-'+verse).css('background-color','#ffb');
     }
     return function(data){
+      $('#hovertext').hide().removeClass('fixed');
       $('#singleshow').show().find('.results').html(data).find('.verse a').each(function(){
         $.data(this, 'footnote', $(this).attr('title').replace(/;/g,'<br/>'));
         $(this).attr('title','').attr('href','javascript:void(0)');
@@ -91,24 +104,40 @@ var SearchTheScriptures = Class([],{
           $(document).bind('mousedown',out);
         }
       });
-      $('#singleshow .show-all').click(function(){
-        self.show_whole_chap(book,chap);
+      $('#singleshow .expand').click(function(){
+        self.show_whole_chap(reference);
       });
       $('#singleshow .collapse').click(function(){
-        self.show_chap(book,chap,true);
+        self.show_chap(reference);
       });
       $('#singleshow .jump a.result').click(function(){
         jumpto(this.innerHTML);
       });
-      if (!nonav && !$('#singleshow .breadcrumb .'+book+'/'+chap).length){
-        $('<div class="'+book+'/'+chap+'">'+self.bookdata[book]+' '+chap+'</div>').appendTo('#singleshow .breadcrumb').click(function(){
-          //self.show_whole_chap(self.
+      var crumb = $('#singleshow .results .crumb');
+      var thecrumb = null;
+      var done = false;
+      $('#singleshow .breadcrumb .crumb').removeClass('selected').each(function(){
+        if ($('span',this).html() == $('span',crumb).html()){
+          done=true;
+          thecrumb = $(this).addClass('selected');
+        }
+      });
+      if (!done){
+        thecrumb = crumb.clone().appendTo('#singleshow .breadcrumb').addClass('selected').click(function(){
+          self.show_whole_chap($('span',this).html());
+        }).find('.delete').click(function(){
+          $(this).parent().remove();
+          if (!$('#singleshow .breadcrumb .crumb').length){
+            $('#back').hide();
+            $('#singleshow').hide();
+          }
         });
-      }else{
-        $('#singleshow .breadcrumb div').removeClass('selected');
-        $('#singleshow .breadcrumb .'+book+'/'+chap).addClass('selected');
       }
-      $('#singleshow .results .jump').appendTo('#singleshow .breadcrumb');
+      if (reference.split(':').length==2){
+        var verse = reference.split(':')[1].replace(/\([^)]+\)/g,'').replace(/[^\d]/g,'');
+        jumpto(verse);
+      }
+      $('#singleshow .jumprow').html('').append($('#singleshow .results .jump'));
       //debugger;
       if (verse){
         jumpto(verse);
@@ -117,19 +146,24 @@ var SearchTheScriptures = Class([],{
   },
   
   gotoFootnote:function(self,note){
+    $('#hovertext').hide().removeClass('fixed');
     note = note.replace(/^\s+/g,'').replace(/\s+$/g,'');
     if (note.indexOf('TG')==0){
     
     }else if (note.indexOf('BD')==0){
     
+    }else if (note.indexOf('OR')==0){
+    
     }else if (note.indexOf('HEB')==0){
     
     }else{ // assume its a reference
-      var parts = note.replace(': ',':').split(' ');
-      bk = parts[0].toLowerCase().replace(/\.$/g,'');
-      //debugger;
-      var cv = parts[1].replace(/\.$/g,'').split(':');
-      self.show_whole_chap(bk,cv[0],true,cv[1]);
+      for (var name in self.bookdata){
+        if (note.indexOf(titleize(name))==0 || note.indexOf(self.bookdata[name])==0){
+          self.show_whole_chap(note);
+          return;
+        }
+      }
+//      self.show_whole_chap(note);
     }
   },
   
@@ -141,7 +175,7 @@ var SearchTheScriptures = Class([],{
   _search:function(self,data){
     eval('var results = '+data);
     var books = {};
-    $('.chapter').css('background-color','#bbddff').each(function(){
+    $('.chapter').css('background-color','#bbddff').removeClass('results').each(function(){
       $.data(this,'num',0);
     });
     for (var i=0;i<results.length;i++){
@@ -158,7 +192,7 @@ var SearchTheScriptures = Class([],{
         num = chrs.length*3;
       }
       var c = chrs[parseInt(chrs.length-num/3)];
-      chap.css('background-color','#f'+c+c);
+      chap.css('background-color','#f'+c+c).addClass('results');
     }
     for (var name in self.bookdata){
       if (!books[name])books[name]=0;
