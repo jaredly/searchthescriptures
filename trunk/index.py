@@ -49,43 +49,75 @@ def search():
 
 def show_chapter():
   std = libbom.StdWks()
-  chap = std[form['book'].value][int(form['chap'].value)-1]
-  res = list(chap.search(form['term'].value,whole = (form.has_key('whole_word') and form['whole_word'].value=='true')))
-  rgx = re.compile(fixrgx(form['term'].value),re.I)
-  #print '<pre>',fixrgx(form['term'].value),'</pre>'
-  for v in res:
-    print rgx.sub(highlight,clean(chap[v].encode('utf8'))).replace(" onclick='return toggleMarked(event, this)'",'')
-    print '<div class="show-all">Expand to show whole chapter</div>'
-  if not res:
-    print '<h2>No results</h2>'
-
-def show_whole_chapter():
-  std = libbom.StdWks()
-  ref = re.sub('\([^)]+\)','',form['ref'].value.replace(': ',':')).split(' ')
+  ref = re.sub('\([^)]+\)','',form['ref'].value.replace(': ',':')).strip(' .')
+  parts = ref.split(' ')
   if len(ref)<2:
     raise Exception
-  book = ref[0].strip('. ')
-  cv = ref[1]
+  book = parts[0]
+  if book.isdigit():
+    book = book+'_'+parts[1]
+    parts.pop(0)
+  elif book in ('First','Second','Third','Fourth'):
+    book = book+' '+parts[1]
+    parts.pop(0)
+  if book[-1]=='.':
+    book = book.lower().strip('. ')
+  cv = parts[1]
   if ':' in cv:
     c,v = cv.split(':')
   else:
     c=cv
     v=None#ref[2]
-  #v = re.findall('\d+',v)[0]
+  if not form.has_key('term'):
+    return show_whole_chapter()
+  chap = std[book][int(c)-1]
+  res = list(chap.search(form['term'].value,whole = (form.has_key('whole_word') and form['whole_word'].value=='true')))
+  rgx = re.compile(fixrgx(form['term'].value),re.I)
   
-  #chap = std[form['book'].value][int(form['chap'].value)-1]
+  if not res:
+    return show_whole_chapter()
+  
+  print '<div class="crumb"><span>'+ref+'</span><div class="delete"></div></div>'
+  print '<div class="jump"><div class="expand">show whole chapter</div></div>'
+  
+  #print '<pre>',fixrgx(form['term'].value),'</pre>'
+  for v in res:
+    print rgx.sub(highlight,clean(chap[v].encode('utf8'))).replace(" onclick='return toggleMarked(event, this)'",'')
+
+def show_whole_chapter():
+  std = libbom.StdWks()
+  ref = re.sub('\([^)]+\)','',form['ref'].value.replace(': ',':')).strip(' .')
+  parts = ref.split(' ')
+  if len(ref)<2:
+    raise Exception
+  book = parts[0]
+  if book.isdigit():
+    book = book+'_'+parts[1]
+    parts.pop(0)
+  elif book in ('First','Second','Third','Fourth'):
+    book = book+' '+parts[1]
+    parts.pop(0)
+  if book[-1]=='.':
+    book = book.lower().strip('. ')
+  cv = parts[1]
+  if ':' in cv:
+    c,v = cv.split(':')
+  else:
+    c=cv
+    v=None#ref[2]
   chap = std[book][int(c)-1]
   
   search = form.has_key('term')
-  print '<div class="crumb">'+ref+'</div>'
+  print '<div class="crumb"><span>'+ref+'</span><div class="delete"></div></div>'
   if search:
     res = list(chap.search(form['term'].value,whole = (form.has_key('whole_word') and form['whole_word'].value=='true')))
     rgx = re.compile(fixrgx(form['term'].value),re.I)
-    print '<div class="jump">Jump to result # '
-    for v in res:
-      print '<a href="javascript:void(0);" class="result">%d</a> '%(v+1)
-    print '<a href="javascript:void(0);" class="collapse">Collapse to search results</a>'
-    print '</div>'
+    if res:
+      print '<div class="jump">Jump to verse '
+      for v in res:
+        print '<a href="javascript:void(0);" class="result">%d</a> '%(v+1)
+      print '<span class="collapse">collapse to search results</span>'
+      print '</div>'
   
   for v in range(len(chap)):
     if search:
@@ -94,7 +126,7 @@ def show_whole_chapter():
       print clean(chap[v].encode('utf8')).replace(" onclick='return toggleMarked(event, this)'",'')
 
 def clean(verse):
-  return re.sub('<div id="[^"]+(\\d+)"',lambda a:'<div class="verse" id="verse-%s"'%a.groups()[0],verse)  
+  return re.sub('<div id="[^"]+?(\\d+)"',lambda a:'<div class="verse" id="verse-%s"'%a.groups()[0],verse)  
 
 def fixrgx(t):
   fixed = re.sub('(\w+)',lambda a:'(?:<sup>\w</sup>)?(?:<[^>]+>)*'+a.group()+'(?:<[^>]+>)*',t).replace(' ','[\s\W,]+')
@@ -112,8 +144,8 @@ def notintag(x):
 
 requireds = {'load_booklist':[],
              'search':['term'],
-             'show_chapter':['book','chap','term'],
-             'show_whole_chapter':['book','chap']}
+             'show_chapter':['ref'],
+             'show_whole_chapter':['ref']}
 custom_type = []
 
 if __name__=='__main__':
@@ -127,6 +159,7 @@ if __name__=='__main__':
           print 'Content-type:text/html\n'
         globals()[form['cmd'].value]()
     except:
-        print 'Content-type:text/plain\n'
+        print 'Content-type:text/plain'
+        print 'Cache-control:max-age=3600\n'
         raise
 

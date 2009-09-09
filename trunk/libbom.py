@@ -39,7 +39,7 @@ class StdWks:
         for wk in self:
           if i in wk:
             return wk[i]
-        raise Exception,"No such Work or Book found"
+        raise Exception,"No such Work or Book found '%s'"%i
   
   def __len__(self):
     return len(self.works)
