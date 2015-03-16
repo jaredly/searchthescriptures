@@ -1,0 +1,1 @@
+this project is a web app to search the LDS scriptures (scriptures.lds.org) and visualize the results
